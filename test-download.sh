@@ -8,10 +8,10 @@ download=${now}".doc"
 docx=${now}".docx"
 (curl -L --max-time 30 $url > $download;) | /bin/bash -s >/dev/null 2>&1
 rc=$?
+echo $rc
 if [ -z "$rc" ]
 then
     echo "Документ загружен"
-
     echo "Конвертация документа ..." $download
 else
     rm $download
