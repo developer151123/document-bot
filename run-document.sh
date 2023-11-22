@@ -7,9 +7,11 @@ now=`date +"%Y-%m-%d"`
 download=${now}".doc"
 docx=${now}".docx"
 
-(curl -L --max-time 30 $url > $download;) | /bin/bash -s >/dev/null 2>&1
-rc=$?
-if [ -z "$rc" ]
+curl -L --max-time 30 $url > $download;
+status="$?"
+echo $status
+zero=0;
+if [[ $status -eq $zero ]];
 then
     echo "Документ загружен"
 
