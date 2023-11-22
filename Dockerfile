@@ -32,6 +32,5 @@ RUN chmod 0644 /etc/cron.d/document-cron
 RUN crontab /etc/cron.d/document-cron
  
 # Create the log file to be able to run tail
-RUN 
 RUN touch /var/log/cron.log
 CMD ./run-document.sh & cron && tail -f /var/log/cron.log
