@@ -6,23 +6,15 @@ echo "URL документа:" $url
 now=`date +"%Y-%m-%d"`
 download=${now}".doc"
 docx=${now}".docx"
-
 (curl -L --max-time 30 $url > $download;) | /bin/bash -s >/dev/null 2>&1
 rc=$?
 if [ -z "$rc" ]
 then
     echo "Документ загружен"
 
-    echo "Конвертация документа ..." 
-    rm *.docx
-    unoconv -d document --format=docx ${download}
-    rm ${download}
+    echo "Конвертация документа ..." $download
 else
     rm $download
     docx=$(ls *.docx)
     echo "Документ не загружен, используем текущий " $docx 
 fi  
-
-
-echo "Запуск бота ..." 
-python3 bot.py ${docx}
