@@ -19,8 +19,8 @@ ARG CACHEBUST=1
 WORKDIR /app
 COPY . .
 RUN pip install -r /app/requirements.txt
-RUN chmod +x run-document.sh
-RUN chmod +x restart-document.sh
+RUN chmod +x download-document.sh
+RUN chmod +x start-document.sh
 
 # Copy hello-cron file to the cron.d directory
 COPY document-cron /etc/cron.d/document-cron
@@ -33,4 +33,4 @@ RUN crontab /etc/cron.d/document-cron
  
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
-CMD ./run-document.sh & cron && tail -f /var/log/cron.log
+CMD ./start-document.sh & cron && tail -f /var/log/cron.log

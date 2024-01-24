@@ -1,4 +1,7 @@
 #!/bin/bash
+
+cd /app
+
 echo "Загрузка документа ..."
 input_doc=$(curl -s http://mininform.gov.by/documents/respublikanskiy-spisok-ekstremistskikh-materialov/ | grep -E -io 'href="[^\"]+.doc"' | awk -F\" '{print$2}')
 doc_file=$(curl -s http://mininform.gov.by/documents/respublikanskiy-spisok-ekstremistskikh-materialov/ | grep -E -io '[a-zA-Z0-9]+.doc')
@@ -8,13 +11,12 @@ url="http://mininform.gov.by"$input_doc
 
 echo "URL документа:" $url
 echo "Файл:" $doc_file
-echo "Документ на сайте:" $doc_name
+echo "Документ:" $doc_name
 
 download=${doc_name}".doc"
 docx_next=${doc_name}".docx"
 docx_current=$(ls *.docx)
 
-echo "Текущий документ:" $doc_name
 
 download_file() {
   curl -L --max-time 30 $url > $download;
@@ -25,7 +27,8 @@ download_file() {
   then
       echo "Документ загружен"
       echo "Конвертация документа ..." $download
-      #unoconv -d document --format=docx ${download}
+      unoconv -d document --format=docx ${download}
+      rm $download
       echo "Документ загружен, новый документ" $docx_next
   else
       rm $download
@@ -39,4 +42,3 @@ else
     echo 'Необходима загрузка нового документа ' $docx_next
     download_file
 fi
-
