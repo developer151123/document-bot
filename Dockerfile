@@ -21,6 +21,7 @@ COPY . .
 RUN pip install -r /app/requirements.txt
 RUN chmod +x download-document.sh
 RUN chmod +x start-document.sh
+RUN chmod +x restart-document.sh
 
 # Copy hello-cron file to the cron.d directory
 COPY document-cron /etc/cron.d/document-cron
