@@ -66,10 +66,18 @@ async def post_row(update: Update, row, line) -> None:
         if is_not_blank(para):
             await update.message.reply_text(para)
     text = ''
+    paragraphs=0
     for para in row.text:
         if is_not_blank(para):
+            paragraphs=paragraphs+1
             text += para + '\n'
+            if len(text)>2048:
+                await update.message.reply_text(text)
+                text = ''
+
     if is_not_blank(text):
+        print(len(text))
+        print(paragraphs)
         await update.message.reply_text(text)
 
     text = ''
