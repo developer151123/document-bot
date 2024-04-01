@@ -26,7 +26,7 @@ echo "Текущий документ:" $docx_active
 nohup python3 bot.py ${docx_active} &
 echo "Бот стартовал"
 
-(crontab -u root -l ; echo "*/15 * * * * sh /app/download-document.sh >> /var/log/cron.log 2>&1" ) | crontab -u root -
-(crontab -u root -l ; echo "*/5 * * * * sh /app/restart-document.sh >> /var/log/cron.log 2>&1" ) | crontab -u root -
-(crontab -u root -l ; echo "0 1 * * * sh /app/start-document.sh >> /var/log/cron.log 2>&1" ) | crontab -u root -
+(crontab -u root -l ; echo "*/15 * * * * bash /app/download-document.sh >> /var/log/cron.log 2>&1" ) | crontab -u root -
+(crontab -u root -l ; echo "*/5 * * * * bash /app/restart-document.sh >> /var/log/cron.log 2>&1" ) | crontab -u root -
+(crontab -u root -l ; echo "0 1 * * * bash /app/start-document.sh >> /var/log/cron.log 2>&1" ) | crontab -u root -
 echo "Выход из скрипта"
