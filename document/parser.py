@@ -56,9 +56,6 @@ def load_document(filename):
 
             print("Загружено строк ", rows)
             print("Найдено линков ", len(DocumentLinks))
-            if len(DocumentLinks) > 5:
-                write_links()
-                return
 
     logger.log(level=logging.INFO, msg="Конец загрузки документа, прочитано  " + str(rows) + " строк")
     print("Запись линков в файл ")
