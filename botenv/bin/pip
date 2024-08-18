@@ -1,4 +1,4 @@
-#!/Users/plavinski/Development/MIRBDocumentBot/botenv/bin/python3.10
+#!/Users/plavinski/Development/document-bot/botenv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
