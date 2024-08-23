@@ -8,25 +8,48 @@ import xlsxwriter
 from docx import Document
 from difflib import SequenceMatcher
 
+
 #
 class DocumentRow(NamedTuple):
     type: list
     text: list
     justification: list
 
+
 class DocumentLink(NamedTuple):
     link: str
+    channel: str
     justification: list
 
 
 DocumentRows = []
 DocumentLinks = []
 
-
 logger = logging.getLogger(__name__)
+
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
+
+
+def is_valid_number(text, start, end):
+    before = text[start - 1] if start > 0 else ' '
+    after = text[end] if end < len(text) else ' '
+    return before in ' \t\n.,;:!?()[]{}' and after in ' \t\n.,;:!?()[]{}'
+
+
+def remove_point(link):
+    if len(link) == 0:
+        return link
+    if link[-1] == '.':
+        link = link[:-1]
+    return link
+
+def remove_disclaimer(justification):
+    disclaimer_index = justification.find('Подлежит немедленному исполнению')
+    if disclaimer_index != -1:
+        justification = justification[:disclaimer_index]
+    return justification
 
 def load_document(filename):
     logger.log(level=logging.INFO, msg="Начало загрузки документа")
@@ -36,7 +59,8 @@ def load_document(filename):
 
     document = Document(filename)
     rows = 0
-    regex_pattern = re.compile(r't\.me/[a-zA-Z0-9_.-]+')
+    link_pattern = re.compile(r't\.me/[a-zA-Z0-9_.-]+')
+    id_pattern = re.compile(r'\d{5,}')
 
     for table in document.tables:
         for row in table.rows:
@@ -47,12 +71,23 @@ def load_document(filename):
                 for para in cell.paragraphs:
                     cell_para.append(para.text)
                 row_cells.append(cell_para)
-            DocumentRows.append(DocumentRow(type=row_cells[0],text=row_cells[1],justification=row_cells[2]))
+            DocumentRows.append(DocumentRow(type=row_cells[0], text=row_cells[1], justification=row_cells[2]))
 
-            link_found = False
+            link = ''
+            channel_id = -1
+
             for cell_para in row_cells[1]:
-                for match in regex_pattern.finditer(cell_para):
-                    DocumentLinks.append(DocumentLink(link=match.group(),justification=row_cells[2]))
+                for match in link_pattern.finditer(cell_para):
+                    link = match.group()
+                for match in id_pattern.finditer(cell_para):
+                    number = match.group()
+                    if number.startswith("100"):
+                        number = number[3:]  # Удаление первых 100
+                    if is_valid_number(cell_para, match.start(), match.end()) and len(number) >= 5:
+                        channel_id = number
+
+            if len(link) != 0:
+                DocumentLinks.append(DocumentLink(link=remove_point(link), channel=channel_id, justification=row_cells[2]))
 
             print("Загружено строк ", rows)
             print("Найдено линков ", len(DocumentLinks))
@@ -61,41 +96,46 @@ def load_document(filename):
     print("Запись линков в файл ")
     write_links()
 
+
 def is_not_blank(s):
     return bool(s and not s.isspace())
+
 
 def silentremove(filename):
     try:
         os.remove(filename)
-    except OSError as e: # this would be "except OSError, e:" before Python 2.6
-        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
-            raise # re-raise exception if a different error occurred
+    except OSError as e:  # this would be "except OSError, e:" before Python 2.6
+        if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
+            raise  # re-raise exception if a different error occurred
+
 
 def write_links():
-
     silentremove('telegram-links.xlsx')
     # Create an new Excel file and add a worksheet.
     workbook = xlsxwriter.Workbook('telegram-links.xlsx')
     worksheet = workbook.add_worksheet()
 
     # Widen the first column to make the text clearer.
-    worksheet.set_column('A:A', 20)
-    worksheet.set_column('B:B', 200)
+    worksheet.set_column('A:A', 100)
+    worksheet.set_column('B:B', 50)
+    worksheet.set_column('C:C', 200)
 
     # Write some simple text.
     worksheet.write('A1', 'Ссылки на каналы')
-    worksheet.write('B1', 'Решения суда')
+    worksheet.write('B1', 'ID канала')
+    worksheet.write('C1', 'Решения суда')
 
     row = 1
     for link in DocumentLinks:
         worksheet.write(row, 0, link.link)
+        if link.channel != '-1':
+            worksheet.write(row, 1, link.channel)
         text = ''
         for para in link.justification:
             if is_not_blank(para):
                 text += para + '\n'
-
         if is_not_blank(text):
-            worksheet.write(row, 1, text)
+            worksheet.write(row, 2, remove_disclaimer(text))
         row += 1
 
     workbook.close()
@@ -103,7 +143,7 @@ def write_links():
 
 def parse_document(text):
     foundRows = []
-    logger.log(level=logging.INFO, msg="Начало поиска последовательности " + text )
+    logger.log(level=logging.INFO, msg="Начало поиска последовательности " + text)
     for row in DocumentRows:
         for para in row.text:
             if text.casefold() in para.casefold():
